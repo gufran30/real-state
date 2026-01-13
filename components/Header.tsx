@@ -9,21 +9,28 @@ import { NAV_LINKS, MenuType } from "@/lib/constants";
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState<MenuType | null>(null);
 
-  const navRef = useRef<HTMLUListElement>(null);
+  const dropdownRef = useRef<HTMLLIElement | null>(null);
+
 
   useEffect(() => {
-    const handelClickOutside = (event: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveMenu(null)
+      }
+    }
+
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setActiveMenu(null);
       }
     }
 
-    document.addEventListener("mousedown", handelClickOutside);
-
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleEsc);
     return () => {
-      document.removeEventListener("mousedown", handelClickOutside)
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleEsc)
     }
-
   }, [])
 
   return (
@@ -31,7 +38,8 @@ const Header = () => {
       <nav className="flex items-center justify-between">
         <Image src={Logo} alt="logo" width={400} priority />
 
-        <ul ref={navRef} className="flex items-center gap-10 text-base">
+        <ul
+          className="flex items-center gap-10 text-base">
           {/* Static Links */}
           {["Home", "About", "Showcase", "Contact"].map((link) => (
             <li key={link} className="cursor-pointer text-teal-500 hover:text-teal-700 transition">
@@ -43,6 +51,7 @@ const Header = () => {
           {NAV_LINKS.map((item) => (
             <li
               key={item.type}
+              ref={activeMenu === item.type ? dropdownRef : null}
               className="relative flex items-center cursor-pointer text-teal-500"
               onClick={() => setActiveMenu(activeMenu === item.type ? null : item.type)}
             >
@@ -50,19 +59,20 @@ const Header = () => {
               <IoMdArrowDropdown className={`text-lg transition-transform ${activeMenu === item.type ? "rotate-180" : ""}`}
               />
 
-              {activeMenu === item.type && (
-                <div className="absolute top-10 -left-5 shadow-lg border border-stone-100 bg-white min-w-50 rounded-md z-10"
-                >
-                  {item.options.map((option) => (
-                    <div
-                      key={option}
-                      className="px-4 py-2 hover:bg-stone-100 transition whitespace-nowrap"
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div
+                className={`absolute top-10 -left-5 shadow-lg border border-stone-100 bg-white min-w-50 rounded-md z-10 transition-all duration-200 ease-out ${activeMenu === item.type ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"}`}
+              >
+
+                {item.options.map((option) => (
+                  <div
+                    key={option}
+                    className="px-4 py-2 hover:bg-stone-100 transition whitespace-nowrap"
+                  >
+                    {option}
+                  </div>
+                ))}
+
+              </div>
             </li>
           ))}
 
